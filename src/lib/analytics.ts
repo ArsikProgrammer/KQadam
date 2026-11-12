@@ -3,6 +3,7 @@ import {
   hourGain,
   statsByTopic,
   targetMastery,
+  textbooks,
   textbookStats,
   type Textbook,
   type TopicStat,
@@ -145,6 +146,52 @@ export function hourPlan(stats: TopicStat[] = averageStats()): HourPlanRow[] {
       projected: Math.min(0.95, Math.max(0, mastery + (row.recHours - row.factHours) * hourGain)),
     }))
     .sort((a, b) => b.delta - a.delta);
+}
+
+export interface SelectionWeights {
+  mastery: number;
+  weakCoverage: number;
+  efficiency: number;
+}
+
+export interface RankedTextbook {
+  textbook: Textbook;
+  score: number;
+  mastery: number;
+  weakCoverage: number;
+  efficiency: number;
+}
+
+export function rankTextbooks(weights: SelectionWeights): RankedTextbook[] {
+  const weakIds = new Set(hardTopics(5).map((topic) => topic.topicId));
+  const metrics = textbooks.map((textbook) => {
+    const stats = textbookStats[textbook.id];
+    const mastery = stats.reduce((sum, stat) => sum + stat.mastery, 0) / stats.length;
+    const weakStats = stats.filter((stat) => weakIds.has(stat.topicId));
+    const weakCoverage = weakStats.reduce((sum, stat) => sum + stat.mastery, 0) / weakStats.length;
+    const perHour = stats.reduce((sum, stat) => sum + stat.mastery / stat.hours, 0) / stats.length;
+    return { textbook, mastery, weakCoverage, perHour };
+  });
+
+  const bestPerHour = Math.max(...metrics.map((metric) => metric.perHour));
+  const totalWeight = weights.mastery + weights.weakCoverage + weights.efficiency || 1;
+
+  return metrics
+    .map((metric) => {
+      const efficiency = metric.perHour / bestPerHour;
+      return {
+        textbook: metric.textbook,
+        mastery: metric.mastery,
+        weakCoverage: metric.weakCoverage,
+        efficiency,
+        score:
+          (weights.mastery * metric.mastery +
+            weights.weakCoverage * metric.weakCoverage +
+            weights.efficiency * efficiency) /
+          totalWeight,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
 }
 
 export function buildAnalysisPrompt(

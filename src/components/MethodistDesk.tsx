@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { AiPanel } from "./AiPanel";
-import { compareTextbooks, hardTopics, hourPlan } from "../lib/analytics";
+import {
+  compareTextbooks,
+  hardTopics,
+  hourPlan,
+  rankTextbooks,
+  type SelectionWeights,
+} from "../lib/analytics";
 import {
   textbookById,
   textbooks,
@@ -181,6 +187,95 @@ function ComparisonCard() {
   );
 }
 
+const weightLabels: { key: keyof SelectionWeights; label: string; hint: string }[] = [
+  {
+    key: "mastery",
+    label: "Средний уровень освоения",
+    hint: "общие результаты по программе",
+  },
+  {
+    key: "weakCoverage",
+    label: "Закрытие слабых разделов",
+    hint: "топ-5 сложных тем",
+  },
+  {
+    key: "efficiency",
+    label: "Отдача от учебных часов",
+    hint: "освоение на вложенный час",
+  },
+];
+
+function SelectionCard() {
+  const [weights, setWeights] = useState<SelectionWeights>({
+    mastery: 40,
+    weakCoverage: 40,
+    efficiency: 20,
+  });
+  const ranked = useMemo(() => rankTextbooks(weights), [weights]);
+  const best = ranked[0];
+
+  return (
+    <div className="card desk-card selection-card">
+      <h3>Подбор учебника под задачу</h3>
+      <p className="card-note">
+        Задайте приоритеты школы — скоринг пересоберёт рейтинг из тех же
+        измеримых метрик и покажет, почему лидер выигрывает.
+      </p>
+
+      <div className="weight-sliders">
+        {weightLabels.map((item) => (
+          <div className="slider-row" key={item.key}>
+            <label>
+              {item.label}
+              <b>{weights[item.key]}</b>
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={weights[item.key]}
+              onChange={(event) =>
+                setWeights({ ...weights, [item.key]: Number(event.target.value) })
+              }
+            />
+            <span className="weight-hint">{item.hint}</span>
+          </div>
+        ))}
+      </div>
+
+      <ul className="select-list">
+        {ranked.map((entry, index) => (
+          <li key={entry.textbook.id}>
+            <div className="select-head">
+              <span className="rank-num">{index + 1}</span>
+              <b>
+                {entry.textbook.publisher}, {entry.textbook.year}
+              </b>
+              <span className="select-score">{Math.round(entry.score * 100)} / 100</span>
+            </div>
+            <div className="bar-track">
+              <div
+                className={`bar-fill ${index === 0 ? "bar-fill-gold" : ""}`}
+                style={{ width: `${entry.score * 100}%` }}
+              />
+            </div>
+            <p className="rank-meta">
+              освоение {pct(entry.mastery)}% · слабые темы {pct(entry.weakCoverage)}% · отдача{" "}
+              {pct(entry.efficiency)}%
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <p className="card-foot">
+        При текущих приоритетах рекомендуется «{best.textbook.publisher}» — счёт{" "}
+        {Math.round(best.score * 100)} из 100. Вес критериев виден методисту,
+        поэтому выбор можно защитить на педсовете.
+      </p>
+    </div>
+  );
+}
+
 export function MethodistDesk() {
   return (
     <section className="section" id="methodist">
@@ -201,6 +296,8 @@ export function MethodistDesk() {
         </div>
 
         <ComparisonCard />
+
+        <SelectionCard />
 
         <AiPanel />
       </div>
