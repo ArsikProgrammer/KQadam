@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { buildAnalysisPrompt, type AiAnalysis } from "../lib/analytics";
 import { analyzeTextbook, getApiKey, setApiKey } from "../lib/llm";
-import { textbookById, textbooks, textbookStats } from "../data/textbooks";
+import { bookList } from "../data/bookContext";
 import { textbookReports } from "../data/reports";
-import { bookContext } from "../data/bookContext";
 
 function ScoreRing({ score }: { score: number }) {
   const radius = 34;
@@ -26,12 +25,13 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 export function AiPanel() {
-  const [bookId, setBookId] = useState("atamura");
-  const [result, setResult] = useState<AiAnalysis>(textbookReports["atamura"]);
+  const [bookId, setBookId] = useState(bookList[0].id);
+  const [result, setResult] = useState<AiAnalysis>(textbookReports[bookList[0].id]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
   const [apiKey, setApiKeyState] = useState(getApiKey());
+  const book = bookList.find((item) => item.id === bookId) ?? bookList[0];
 
   const selectBook = (id: string) => {
     setBookId(id);
@@ -49,9 +49,7 @@ export function AiPanel() {
     setLoading(true);
     setError(null);
     try {
-      const analysis = await analyzeTextbook(
-        buildAnalysisPrompt(textbookById(bookId), textbookStats[bookId]),
-      );
+      const analysis = await analyzeTextbook(buildAnalysisPrompt(book));
       setResult(analysis);
       setLive(true);
     } catch (cause) {
@@ -67,29 +65,28 @@ export function AiPanel() {
     <div className="card ai-card">
       <h3>AI-разбор учебника</h3>
       <p className="card-note">
-        Модель разбирает результаты тестирования по всем 43 темам программы и
-        оценивает учебник по шести критериям: соответствие программе и ЕНТ,
-        терминология, доступность изложения, структура глав, практика и
-        распределение часов.
+        Модель Qwen 3.7 Flash разбирает структуру и содержание реального издания
+        и оценивает его по пяти критериям: соответствие программе и ЕНТ,
+        терминология, доступность изложения, структура глав и практика.
+        Разбор сохранён заранее — кнопка ниже запускает свежий пересчёт моделью.
       </p>
 
       <div className="segmented ai-books">
-        {textbooks.map((book) => (
+        {bookList.map((item) => (
           <button
-            key={book.id}
-            className={book.id === bookId ? "is-active" : ""}
-            onClick={() => selectBook(book.id)}
+            key={item.id}
+            className={item.id === bookId ? "is-active" : ""}
+            onClick={() => selectBook(item.id)}
           >
-            {book.publisher}
-            <span>{book.year}</span>
+            {item.publisher}
+            <span>{item.year}</span>
           </button>
         ))}
       </div>
 
       <p className="ai-secure">
-        {bookContext[bookId]?.verified
-          ? `Разбор опирается на реальное издание: «${bookContext[bookId].title}», ${bookContext[bookId].authors}, ${textbookById(bookId).publisher}, ${bookContext[bookId].year}.`
-          : "Реальное издание недоступно — разбор только по статистике тестирования."}
+        Реальное издание: «{book.title}», {book.authors}, {book.publisher},{" "}
+        {book.year}.
       </p>
 
       <div className="ai-run-row">
@@ -168,21 +165,6 @@ export function AiPanel() {
                 </div>
               ))}
             </div>
-          </>
-        )}
-
-        {result.hourPlan.length > 0 && (
-          <>
-            <h4>План часов</h4>
-            <ul className="ai-hours">
-              {result.hourPlan.map((item) => (
-                <li key={item.topic}>
-                  <b>{item.topic}</b>
-                  <span className="delta-chip delta-up">{item.change}</span>
-                  <span className="ai-hours-reason">{item.reason}</span>
-                </li>
-              ))}
-            </ul>
           </>
         )}
       </div>

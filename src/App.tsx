@@ -3,9 +3,8 @@ import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { TopicGraph } from "./components/TopicGraph";
 import { RiskLab } from "./components/RiskLab";
-import { MethodistDesk } from "./components/MethodistDesk";
 import { EntTrack } from "./components/EntTrack";
-import { Pipeline } from "./components/Pipeline";
+import { AiPanel } from "./components/AiPanel";
 import { Footer } from "./components/Footer";
 
 export default function App() {
@@ -39,9 +38,21 @@ export default function App() {
         <Hero />
         <TopicGraph focusTopicId={focusTopicId} />
         <RiskLab />
-        <MethodistDesk />
         <EntTrack onFocusTopic={setFocusTopicId} />
-        <Pipeline />
+        <section className="section section-alt" id="ai">
+          <div className="container">
+            <div className="section-head">
+              <p className="eyebrow">AI-разбор учебников</p>
+              <h2>Реальные учебники — под лупой модели</h2>
+              <p className="section-lead">
+                Структура и содержание изданий Атамұры и Мектеп прочитаны из
+                оригинальных PDF. Модель разбирает их по пяти критериям; готовые
+                разборы сохранены заранее, кнопка ниже запускает свежий пересчёт.
+              </p>
+            </div>
+            <AiPanel />
+          </div>
+        </section>
       </main>
       <Footer />
     </>

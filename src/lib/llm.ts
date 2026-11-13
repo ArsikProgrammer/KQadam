@@ -42,13 +42,6 @@ function parseAnalysis(content: string): AiAnalysis {
           detail: String(item.detail ?? ""),
         }))
       : [],
-    hourPlan: Array.isArray(parsed.hourPlan)
-      ? parsed.hourPlan.map((item) => ({
-          topic: String(item.topic ?? ""),
-          change: String(item.change ?? ""),
-          reason: String(item.reason ?? ""),
-        }))
-      : [],
   };
 }
 

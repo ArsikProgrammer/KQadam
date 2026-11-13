@@ -1,9 +1,8 @@
 const navItems = [
   { id: "graph", label: "Граф тем" },
   { id: "diagnostics", label: "Диагностика" },
-  { id: "methodist", label: "Методистам" },
   { id: "track", label: "Трек к ЕНТ" },
-  { id: "how", label: "Как это работает" },
+  { id: "ai", label: "AI-разбор" },
 ];
 
 function scrollTo(id: string) {
