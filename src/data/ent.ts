@@ -12,7 +12,7 @@ export const entBlocks: EntBlock[] = [
     id: "equations",
     title: "Уравнения и неравенства",
     share: 25,
-    topicIds: ["linear-eq", "linear-sys", "fsu", "quadratic-eq", "interval-method", "trig-eq"],
+    topicIds: ["linear-eq", "linear-sys", "fsu", "quadratic-eq", "rational-eq", "interval-method", "trig-eq"],
     hint: "От линейных уравнений 6 класса до метода интервалов — самая плотная часть экзамена.",
   },
   {
@@ -33,7 +33,7 @@ export const entBlocks: EntBlock[] = [
     id: "geometry",
     title: "Геометрия",
     share: 20,
-    topicIds: ["geo-basics", "pythagoras", "polygons", "circle", "vectors", "stereo", "analytic-geo"],
+    topicIds: ["geo-basics", "pythagoras", "similar", "polygons", "circle", "sine-law", "vectors", "stereo", "analytic-geo"],
     hint: "От площадей 5 класса до аналитической геометрии — чем ровнее база, тем стабильнее балл.",
   },
   {
