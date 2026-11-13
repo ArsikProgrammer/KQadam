@@ -20,26 +20,31 @@ export function setApiKey(key: string): void {
 
 const clampScore = (value: unknown) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
 
+const cleanText = (value: unknown) =>
+  String(value ?? "")
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+    .replace(/[^\u0020-\u024F\u0400-\u04FF\u2010-\u2027\u2032-\u205E\u2116\u2192]/g, "");
+
 function parseAnalysis(content: string): AiAnalysis {
   const json = content.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "").trim();
   const parsed = JSON.parse(json) as Partial<AiAnalysis>;
   if (!parsed.summary) throw new Error("Модель вернула ответ без итога");
   return {
-    summary: String(parsed.summary),
+    summary: cleanText(parsed.summary),
     overallScore: clampScore(parsed.overallScore),
     criteria: Array.isArray(parsed.criteria)
       ? parsed.criteria.map((item) => ({
-          name: String(item.name ?? ""),
+          name: cleanText(item.name),
           score: clampScore(item.score),
-          verdict: String(item.verdict ?? ""),
+          verdict: cleanText(item.verdict),
         }))
       : [],
-    strengths: Array.isArray(parsed.strengths) ? parsed.strengths.map(String) : [],
-    weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.map(String) : [],
+    strengths: Array.isArray(parsed.strengths) ? parsed.strengths.map(cleanText) : [],
+    weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.map(cleanText) : [],
     recommendations: Array.isArray(parsed.recommendations)
       ? parsed.recommendations.map((item) => ({
-          title: String(item.title ?? ""),
-          detail: String(item.detail ?? ""),
+          title: cleanText(item.title),
+          detail: cleanText(item.detail),
         }))
       : [],
   };
