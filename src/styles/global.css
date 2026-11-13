@@ -1057,12 +1057,19 @@ button {
 
 .compare-selects {
   display: flex;
-  gap: 14px;
+  align-items: center;
+  gap: 10px;
+}
+
+.compare-vs {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .compare-selects label,
-.ai-config label,
-.ai-chapters {
+.ai-key {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1080,6 +1087,16 @@ textarea {
   font-family: inherit;
   font-size: 0.9rem;
   padding: 10px 12px;
+  color-scheme: dark;
+}
+
+select option {
+  background: #12293f;
+  color: var(--ink);
+}
+
+input::placeholder {
+  color: rgba(244, 239, 230, 0.55);
 }
 
 input:focus,
@@ -1110,7 +1127,7 @@ textarea {
 
 .compare-row {
   display: grid;
-  grid-template-columns: 230px 1fr 1fr 64px;
+  grid-template-columns: 220px 1fr 1fr 110px;
   gap: 18px;
   align-items: center;
   font-size: 0.88rem;
@@ -1145,8 +1162,9 @@ textarea {
 }
 
 .compare-winner {
-  text-align: center;
+  text-align: right;
   font-weight: 700;
+  font-size: 0.82rem;
 }
 
 .compare-winner-a {
@@ -1161,15 +1179,37 @@ textarea {
   color: var(--muted);
 }
 
-.ai-config {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+.ai-books {
+  margin-bottom: 22px;
 }
 
-.ai-chapters {
-  margin-bottom: 18px;
+.ai-books button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ai-books button span {
+  font-size: 0.74rem;
+  opacity: 0.7;
+}
+
+.ai-run-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ai-key {
+  flex: 1;
+  min-width: 220px;
+}
+
+.ai-secure {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 10px;
 }
 
 .ai-error {
@@ -1178,10 +1218,64 @@ textarea {
   margin-top: 14px;
 }
 
-.ai-result {
-  margin-top: 24px;
+.ai-report {
+  margin-top: 28px;
   border-top: 1px solid var(--line);
-  padding-top: 20px;
+  padding-top: 26px;
+}
+
+.report-head {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.report-head > div:first-child {
+  flex: 1;
+}
+
+.report-summary {
+  margin-top: 14px;
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.score-ring {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  flex: none;
+}
+
+.score-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.score-ring-base {
+  fill: none;
+  stroke: rgba(244, 239, 230, 0.1);
+  stroke-width: 8;
+}
+
+.score-ring-value {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.score-ring b {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
 }
 
 .ai-badge {
@@ -1196,34 +1290,67 @@ textarea {
   text-transform: uppercase;
 }
 
-.ai-summary {
-  margin: 14px 0 20px;
-  font-size: 0.98rem;
-}
-
-.ai-columns {
+.report-criteria {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 20px;
+  gap: 20px 28px;
+  margin-bottom: 30px;
 }
 
-.ai-columns h4,
-.ai-result > h4 {
+.report-criterion p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 7px;
+}
+
+.report-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+
+.report-columns h4,
+.ai-report > h4 {
   font-size: 0.78rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.ai-columns ul {
+.report-columns ul {
   margin: 0;
   padding-left: 18px;
-  color: var(--muted);
-  font-size: 0.88rem;
+  color: var(--ink);
+  font-size: 0.9rem;
   display: grid;
-  gap: 6px;
+  gap: 8px;
+}
+
+.report-reco {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.report-reco-item {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 16px;
+  background: rgba(232, 176, 75, 0.05);
+}
+
+.report-reco-item b {
+  font-size: 0.92rem;
+}
+
+.report-reco-item p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 5px;
 }
 
 .ai-hours {
@@ -1446,7 +1573,9 @@ textarea {
   .graph-layout,
   .risk-layout,
   .methodist-grid,
-  .ai-columns {
+  .report-criteria,
+  .report-columns,
+  .report-reco {
     grid-template-columns: 1fr;
   }
 

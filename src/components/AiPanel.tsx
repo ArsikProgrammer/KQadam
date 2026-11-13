@@ -1,29 +1,38 @@
 import { useState } from "react";
 import { buildAnalysisPrompt, localAnalysis, type AiAnalysis } from "../lib/analytics";
-import { analyzeTextbook, type LlmConfig } from "../lib/llm";
+import { analyzeTextbook } from "../lib/llm";
 import { textbookById, textbooks, textbookStats } from "../data/textbooks";
 
-const sampleChapters = [
-  "Глава 1. Доли и обыкновенные дроби (12 ч): сравнение дробей, действия, смешанные задачи.",
-  "Глава 2. Десятичные числа и проценты (10 ч): перевод форм, проценты в задачах.",
-  "Глава 3. Рациональные числа (14 ч): свойства действий, порядок выполнения.",
-  "Глава 4. Алгебраические выражения и формулы сокращённого умножения (8 ч).",
-  "Глава 5. Уравнения: линейные и квадратные (12 ч): дискриминант, теорема Виета.",
-  "Глава 6. Функции и графики (18 ч): линейная, квадратичная, показательная.",
-  "Глава 7. Тригонометрия (12 ч): единичная окружность, основные тождества.",
-  "Глава 8. Производная и применение (14 ч): монотонность, экстремумы.",
-].join("\n");
+const llmConfig = {
+  baseUrl: "https://api.commandcode.ai/provider/v1",
+  model: "Qwen/Qwen3.7-Flash",
+};
 
 type Source = "llm" | "local";
 
+function ScoreRing({ score }: { score: number }) {
+  const radius = 34;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <div className="score-ring">
+      <svg viewBox="0 0 80 80">
+        <circle className="score-ring-base" cx="40" cy="40" r={radius} />
+        <circle
+          className="score-ring-value"
+          cx="40"
+          cy="40"
+          r={radius}
+          strokeDasharray={`${(score / 100) * circumference} ${circumference}`}
+        />
+      </svg>
+      <b>{score}</b>
+    </div>
+  );
+}
+
 export function AiPanel() {
-  const [config, setConfig] = useState<LlmConfig>({
-    baseUrl: "https://api.commandcode.ai/provider/v1",
-    model: "Qwen/Qwen3.7-Flash",
-    apiKey: "",
-  });
   const [bookId, setBookId] = useState("atamura");
-  const [chapters, setChapters] = useState(sampleChapters);
+  const [apiKey, setApiKey] = useState("");
   const [result, setResult] = useState<AiAnalysis | null>(null);
   const [source, setSource] = useState<Source>("local");
   const [loading, setLoading] = useState(false);
@@ -35,7 +44,7 @@ export function AiPanel() {
     const book = textbookById(bookId);
     const stats = textbookStats[bookId];
 
-    if (config.apiKey.trim().length === 0) {
+    if (apiKey.trim().length === 0) {
       setResult(localAnalysis(book, stats));
       setSource("local");
       setLoading(false);
@@ -44,8 +53,8 @@ export function AiPanel() {
 
     try {
       const analysis = await analyzeTextbook(
-        config,
-        buildAnalysisPrompt(book, stats, chapters),
+        { ...llmConfig, apiKey },
+        buildAnalysisPrompt(book, stats),
       );
       setResult(analysis);
       setSource("llm");
@@ -64,72 +73,73 @@ export function AiPanel() {
     <div className="card ai-card">
       <h3>AI-разбор учебника</h3>
       <p className="card-note">
-        Вставьте структуру или фрагмент реального учебника — модель сопоставит
-        его с графом тем и статистикой тестов. По умолчанию — Qwen 3.7 Flash
-        через API Command Code; подойдёт любой OpenAI-совместимый эндпоинт
-        (OpenAI, локальный Ollama). Без ключа запускается детерминированный
-        локальный расчёт, ключ хранится только в этой вкладке.
+        Модель оценивает учебник по шести критериям: соответствие программе и
+        ЕНТ, терминология, доступность изложения, структура глав, практика и
+        распределение часов.
       </p>
 
-      <div className="ai-config">
-        <label>
-          API endpoint
-          <input
-            value={config.baseUrl}
-            onChange={(event) => setConfig({ ...config, baseUrl: event.target.value })}
-          />
-        </label>
-        <label>
-          Модель
-          <input
-            value={config.model}
-            onChange={(event) => setConfig({ ...config, model: event.target.value })}
-          />
-        </label>
-        <label>
+      <div className="segmented ai-books">
+        {textbooks.map((book) => (
+          <button
+            key={book.id}
+            className={book.id === bookId ? "is-active" : ""}
+            onClick={() => setBookId(book.id)}
+          >
+            {book.publisher}
+            <span>{book.year}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="ai-run-row">
+        <label className="ai-key">
           API-ключ
           <input
             type="password"
             placeholder="пусто — локальный расчёт"
-            value={config.apiKey}
-            onChange={(event) => setConfig({ ...config, apiKey: event.target.value })}
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
           />
         </label>
-        <label>
-          Учебник
-          <select value={bookId} onChange={(event) => setBookId(event.target.value)}>
-            {textbooks.map((book) => (
-              <option key={book.id} value={book.id}>
-                {book.publisher}, {book.year}
-              </option>
-            ))}
-          </select>
-        </label>
+        <button className="btn btn-primary" onClick={run} disabled={loading}>
+          {loading ? "Анализируем…" : "Запустить разбор"}
+        </button>
       </div>
-
-      <label className="ai-chapters">
-        Структура или фрагмент учебника
-        <textarea
-          rows={7}
-          value={chapters}
-          onChange={(event) => setChapters(event.target.value)}
-        />
-      </label>
-
-      <button className="btn btn-primary" onClick={run} disabled={loading}>
-        {loading ? "Анализируем…" : "Запустить разбор"}
-      </button>
+      <p className="ai-secure">
+        Qwen 3.7 Flash · ключ хранится только во вкладке, без него работает
+        локальный расчёт
+      </p>
 
       {error && <p className="ai-error">{error}</p>}
 
       {result && (
-        <div className="ai-result">
-          <p className="ai-badge">
-            {source === "llm" ? "Разбор LLM-моделью" : "Локальный детерминированный расчёт (без LLM)"}
-          </p>
-          <p className="ai-summary">{result.summary}</p>
+        <div className="ai-report">
+          <div className="report-head">
+            <div>
+              <p className="ai-badge">
+                {source === "llm" ? "Разбор Qwen 3.7 Flash" : "Локальный расчёт (без LLM)"}
+              </p>
+              <p className="report-summary">{result.summary}</p>
+            </div>
+            <ScoreRing score={result.overallScore} />
+          </div>
 
-          <div className="ai-columns">
+          <div className="report-criteria">
+            {result.criteria.map((criterion) => (
+              <div className="report-criterion" key={criterion.name}>
+                <div className="factor-row">
+                  <span>{criterion.name}</span>
+                  <b>{criterion.score}/100</b>
+                </div>
+                <div className="bar-track">
+                  <div className="bar-fill bar-fill-gold" style={{ width: `${criterion.score}%` }} />
+                </div>
+                <p>{criterion.verdict}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="report-columns">
             <div>
               <h4>Сильные стороны</h4>
               <ul>
@@ -148,9 +158,23 @@ export function AiPanel() {
             </div>
           </div>
 
+          {result.recommendations.length > 0 && (
+            <>
+              <h4>Рекомендации</h4>
+              <div className="report-reco">
+                {result.recommendations.map((item) => (
+                  <div className="report-reco-item" key={item.title}>
+                    <b>{item.title}</b>
+                    <p>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           {result.hourPlan.length > 0 && (
             <>
-              <h4>План часов от модели</h4>
+              <h4>План часов</h4>
               <ul className="ai-hours">
                 {result.hourPlan.map((item) => (
                   <li key={item.topic}>

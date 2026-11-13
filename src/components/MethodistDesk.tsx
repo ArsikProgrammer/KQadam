@@ -115,7 +115,6 @@ function ComparisonCard() {
         </div>
         <div className="compare-selects">
           <label>
-            Учебник А
             <select value={aId} onChange={(event) => setAId(event.target.value)}>
               {textbooks.map((book) => (
                 <option key={book.id} value={book.id}>
@@ -124,8 +123,8 @@ function ComparisonCard() {
               ))}
             </select>
           </label>
+          <span className="compare-vs">против</span>
           <label>
-            Учебник Б
             <select value={bId} onChange={(event) => setBId(event.target.value)}>
               {textbooks.map((book) => (
                 <option key={book.id} value={book.id}>
@@ -149,13 +148,14 @@ function ComparisonCard() {
       <div className="compare-table">
         <div className="compare-row compare-row-head">
           <span>Тема</span>
-          <span>А · {bookA.publisher}</span>
-          <span>Б · {bookB.publisher}</span>
+          <span>{bookA.publisher}, {bookA.year}</span>
+          <span>{bookB.publisher}, {bookB.year}</span>
           <span>Лидер</span>
         </div>
         {report.rows.map((row) => {
           const winnerKey = row.a === row.b ? "tie" : row.a > row.b ? "a" : "b";
-          const winnerLabel = winnerKey === "tie" ? "—" : winnerKey === "a" ? "А" : "Б";
+          const winnerLabel =
+            winnerKey === "tie" ? "—" : winnerKey === "a" ? bookA.publisher : bookB.publisher;
           return (
             <div className="compare-row" key={row.topicId}>
               <span className="compare-topic">{row.title}</span>
