@@ -4,3 +4,6 @@ dist/
 .venv/
 .commandcode/
 *.log
+.env
+.env.*
+!.env.example

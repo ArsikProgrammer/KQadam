@@ -3,8 +3,20 @@ import type { AiAnalysis } from "./analytics";
 const provider = {
   baseUrl: "https://api.commandcode.ai/provider/v1",
   model: "Qwen/Qwen3.7-Flash",
-  apiKey: "user_3svwAjLZg6mxhNx47Db2r8ZjJpsj1TX64UNAwQG7x3fzHNr2q7VCe4cwuDpDF5ChnP3ZZhG5eYvECfm7zDL7YmNv",
 };
+
+const KEY_STORAGE = "kadam:llm-key";
+
+/** Ключ API: из переменной окружения VITE_LLM_API_KEY или из ввода во вкладке (sessionStorage). */
+export function getApiKey(): string {
+  const fromEnv = (import.meta.env.VITE_LLM_API_KEY ?? "").trim();
+  if (fromEnv) return fromEnv;
+  return (sessionStorage.getItem(KEY_STORAGE) ?? "").trim();
+}
+
+export function setApiKey(key: string): void {
+  sessionStorage.setItem(KEY_STORAGE, key.trim());
+}
 
 const clampScore = (value: unknown) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
 
@@ -41,11 +53,18 @@ function parseAnalysis(content: string): AiAnalysis {
 }
 
 export async function analyzeTextbook(prompt: string): Promise<AiAnalysis> {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error(
+      "Не задан ключ API: введите его в поле выше или задайте VITE_LLM_API_KEY в .env.local",
+    );
+  }
+
   const response = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${provider.apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: provider.model,

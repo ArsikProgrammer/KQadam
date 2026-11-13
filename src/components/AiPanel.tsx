@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { buildAnalysisPrompt, type AiAnalysis } from "../lib/analytics";
-import { analyzeTextbook } from "../lib/llm";
+import { analyzeTextbook, getApiKey, setApiKey } from "../lib/llm";
 import { textbookById, textbooks, textbookStats } from "../data/textbooks";
 import { textbookReports } from "../data/reports";
 
@@ -29,11 +29,19 @@ export function AiPanel() {
   const [result, setResult] = useState<AiAnalysis>(textbookReports["atamura"]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
+  const [apiKey, setApiKeyState] = useState(getApiKey());
 
   const selectBook = (id: string) => {
     setBookId(id);
     setResult(textbookReports[id]);
     setError(null);
+    setLive(false);
+  };
+
+  const saveKey = (value: string) => {
+    setApiKeyState(value);
+    setApiKey(value);
   };
 
   const rerun = async () => {
@@ -44,6 +52,7 @@ export function AiPanel() {
         buildAnalysisPrompt(textbookById(bookId), textbookStats[bookId]),
       );
       setResult(analysis);
+      setLive(true);
     } catch (cause) {
       setError(
         `Не удалось обновить разбор: ${cause instanceof Error ? cause.message : "ошибка связи"}. Показан сохранённый отчёт модели.`,
@@ -57,8 +66,9 @@ export function AiPanel() {
     <div className="card ai-card">
       <h3>AI-разбор учебника</h3>
       <p className="card-note">
-        Модель оценивает учебник по шести критериям: соответствие программе и
-        ЕНТ, терминология, доступность изложения, структура глав, практика и
+        Модель разбирает результаты тестирования по всем 43 темам программы и
+        оценивает учебник по шести критериям: соответствие программе и ЕНТ,
+        терминология, доступность изложения, структура глав, практика и
         распределение часов.
       </p>
 
@@ -76,10 +86,19 @@ export function AiPanel() {
       </div>
 
       <div className="ai-run-row">
+        <label className="ai-key">
+          Ключ API (OpenAI-совместимый), хранится только во вкладке
+          <input
+            type="password"
+            value={apiKey}
+            placeholder="Вставьте ключ для пересчёта моделью"
+            onChange={(event) => saveKey(event.target.value)}
+            autoComplete="off"
+          />
+        </label>
         <button className="btn btn-primary" onClick={rerun} disabled={loading}>
           {loading ? "Модель анализирует…" : "Пересчитать моделью"}
         </button>
-        <p className="ai-secure">Проанализировано моделью Qwen 3.7 Flash</p>
       </div>
 
       {error && <p className="ai-error">{error}</p>}
@@ -87,7 +106,11 @@ export function AiPanel() {
       <div className="ai-report">
         <div className="report-head">
           <div>
-            <p className="ai-badge">Проанализировано моделью Qwen 3.7 Flash</p>
+            <p className="ai-badge">
+              {live
+                ? "Обновлено моделью Qwen 3.7 Flash"
+                : "Сохранённый разбор модели Qwen 3.7 Flash"}
+            </p>
             <p className="report-summary">{result.summary}</p>
           </div>
           <ScoreRing score={result.overallScore} />

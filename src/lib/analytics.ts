@@ -116,6 +116,7 @@ export function compareTextbooks(aId: string, bId: string): CompareReport {
   });
 
   const winsA = rows.filter((row) => row.a > row.b).length;
+  const winsB = rows.filter((row) => row.b > row.a).length;
   const leadA = [...rows].sort((x, y) => y.a - y.b - (x.a - x.b))[0] ?? null;
   const leadB = [...rows].sort((x, y) => x.a - x.b - (y.a - y.b))[0] ?? null;
 
@@ -123,7 +124,7 @@ export function compareTextbooks(aId: string, bId: string): CompareReport {
     rows,
     avgDiff: rows.reduce((sum, row) => sum + (row.a - row.b), 0) / rows.length,
     winsA,
-    winsB: rows.length - winsA,
+    winsB,
     leadA: leadA && leadA.a - leadA.b > 0 ? leadA : null,
     leadB: leadB && leadB.b - leadB.a > 0 ? leadB : null,
   };
@@ -219,18 +220,26 @@ const analysisCriteria = [
 
 export function buildAnalysisPrompt(book: Textbook, stats: TopicStat[]): string {
   const content = stats.map((stat) => {
-    const grade = topicById.get(stat.topicId)?.grade ?? 0;
-    return `${grade} класс, «${titleOf(stat.topicId)}»: ${stat.hours} ч, освоение ${Math.round(stat.mastery * 100)}%, ошибки ${Math.round(stat.errorRate * 100)}%, влияние на ЕНТ ${Math.round(entWeightOf(stat.topicId) * 100)}%`;
+    const topic = topicById.get(stat.topicId);
+    return `${topic?.grade ?? "?"} класс, «${titleOf(stat.topicId)}» (сложность ${topic?.difficulty ?? "?"}/3): ${stat.hours} ч, освоение ${Math.round(stat.mastery * 100)}%, ошибки ${Math.round(stat.errorRate * 100)}%, влияние на ЕНТ ${Math.round(entWeightOf(stat.topicId) * 100)}%, выборка ${stat.students} уч.`;
   });
 
   return [
     `Ты — методист и аналитик учебных программ. Дай полноценный разбор учебника «${book.title}» (${book.publisher}, ${book.year}) как кандидата на внедрение в школе.`,
     "",
+    "Разбор строится ТОЛЬКО на приведённых ниже результатах тестирования школьников по темам программы 5–11 классов. Ничего не выдумывай: все цифры в выводах бери из данных.",
+    "",
     "Критерии разбора:",
     ...analysisCriteria.map((criterion, index) => `${index + 1}. ${criterion}`),
     "",
-    "Содержание и результаты тестирования (данные школ):",
+    `Результаты тестирования по всем ${stats.length} темам программы (данные школ):`,
     ...content,
+    "",
+    "Требования к ответу:",
+    "- Пиши строго на русском языке, без иностранных слов и вставок.",
+    "- В verdict, strengths, weaknesses и hourPlan ссылайся на конкретные темы и числа из данных.",
+    "- hourPlan — от 4 до 7 пунктов по темам с наибольшим дефицитом освоения при высоком влиянии на ЕНТ; change в формате «+N ч».",
+    "- Итоговая оценка отражает реальные показатели: низкое освоение и высокие ошибки снижают баллы.",
     "",
     "Верни СТРОГО JSON без пояснений по схеме:",
     '{"summary": "итог разбора на 3-4 предложения", "overallScore": 0, "criteria": [{"name": "критерий", "score": 0, "verdict": "вывод по критерию"}], "strengths": ["сильная сторона"], "weaknesses": ["слабое место"], "recommendations": [{"title": "заголовок", "detail": "что сделать"}], "hourPlan": [{"topic": "тема", "change": "+2 ч", "reason": "почему"}]}',

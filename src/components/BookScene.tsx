@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { createBookScene, type BookSpec, type BookSceneHandle } from "../three/bookScene";
+import type { BookSpec, BookSceneHandle } from "../three/bookScene";
 
 interface BookSceneProps {
   books: BookSpec[];
@@ -12,14 +12,24 @@ export function BookScene({ books, openId, onSelect }: BookSceneProps) {
   const handleRef = useRef<BookSceneHandle | null>(null);
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
+  const openIdRef = useRef(openId);
+  openIdRef.current = openId;
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const handle = createBookScene(container, books, (id) => selectRef.current(id));
-    handleRef.current = handle;
+    let disposed = false;
+    let handle: BookSceneHandle | null = null;
+
+    import("../three/bookScene").then(({ createBookScene }) => {
+      const container = containerRef.current;
+      if (disposed || !container) return;
+      handle = createBookScene(container, books, (id) => selectRef.current(id));
+      handle.setOpen(openIdRef.current);
+      handleRef.current = handle;
+    });
+
     return () => {
-      handle.dispose();
+      disposed = true;
+      handle?.dispose();
       handleRef.current = null;
     };
   }, [books]);

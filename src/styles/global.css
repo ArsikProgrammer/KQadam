@@ -98,6 +98,32 @@ button {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(232, 176, 75, 0.32);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(232, 176, 75, 0.32);
+  color: var(--ink);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
 }
 
 .btn {
@@ -1650,5 +1676,10 @@ textarea {
   *::after {
     transition: none !important;
     animation: none !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
