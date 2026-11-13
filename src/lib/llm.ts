@@ -1,10 +1,10 @@
 import type { AiAnalysis } from "./analytics";
 
-export interface LlmConfig {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-}
+const provider = {
+  baseUrl: "https://api.commandcode.ai/provider/v1",
+  model: "Qwen/Qwen3.7-Flash",
+  apiKey: "user_3svwAjLZg6mxhNx47Db2r8ZjJpsj1TX64UNAwQG7x3fzHNr2q7VCe4cwuDpDF5ChnP3ZZhG5eYvECfm7zDL7YmNv",
+};
 
 const clampScore = (value: unknown) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
 
@@ -40,16 +40,15 @@ function parseAnalysis(content: string): AiAnalysis {
   };
 }
 
-export async function analyzeTextbook(config: LlmConfig, prompt: string): Promise<AiAnalysis> {
-  const endpoint = `${config.baseUrl.replace(/\/+$/, "")}/chat/completions`;
-  const response = await fetch(endpoint, {
+export async function analyzeTextbook(prompt: string): Promise<AiAnalysis> {
+  const response = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${provider.apiKey}`,
     },
     body: JSON.stringify({
-      model: config.model,
+      model: provider.model,
       temperature: 0.2,
       response_format: { type: "json_object" },
       messages: [
