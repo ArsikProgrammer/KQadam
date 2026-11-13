@@ -18,8 +18,8 @@ type Source = "llm" | "local";
 
 export function AiPanel() {
   const [config, setConfig] = useState<LlmConfig>({
-    baseUrl: "https://api.openai.com/v1",
-    model: "gpt-4o-mini",
+    baseUrl: "https://api.commandcode.ai/provider/v1",
+    model: "Qwen/Qwen3.7-Flash",
     apiKey: "",
   });
   const [bookId, setBookId] = useState("atamura");
@@ -65,10 +65,10 @@ export function AiPanel() {
       <h3>AI-разбор учебника</h3>
       <p className="card-note">
         Вставьте структуру или фрагмент реального учебника — модель сопоставит
-        его с графом тем и статистикой тестов. Работает с любым
-        OpenAI-совместимым API (OpenAI, локальный Ollama через
-        OLLAMA_ORIGINS). Без ключа запускается детерминированный локальный
-        расчёт, ключ хранится только в этой вкладке.
+        его с графом тем и статистикой тестов. По умолчанию — Qwen 3.7 Flash
+        через API Command Code; подойдёт любой OpenAI-совместимый эндпоинт
+        (OpenAI, локальный Ollama). Без ключа запускается детерминированный
+        локальный расчёт, ключ хранится только в этой вкладке.
       </p>
 
       <div className="ai-config">
