@@ -69,6 +69,8 @@ export async function analyzeTextbook(prompt: string): Promise<AiAnalysis> {
     body: JSON.stringify({
       model: provider.model,
       temperature: 0.2,
+      reasoning_effort: "low",
+      max_tokens: 4000,
       response_format: { type: "json_object" },
       messages: [
         {

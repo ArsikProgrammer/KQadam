@@ -1,4 +1,5 @@
 import { topicById } from "../data/curriculum";
+import { bookContext } from "../data/bookContext";
 import {
   hourGain,
   statsByTopic,
@@ -224,14 +225,26 @@ export function buildAnalysisPrompt(book: Textbook, stats: TopicStat[]): string 
     return `${topic?.grade ?? "?"} класс, «${titleOf(stat.topicId)}» (сложность ${topic?.difficulty ?? "?"}/3): ${stat.hours} ч, освоение ${Math.round(stat.mastery * 100)}%, ошибки ${Math.round(stat.errorRate * 100)}%, влияние на ЕНТ ${Math.round(entWeightOf(stat.topicId) * 100)}%, выборка ${stat.students} уч.`;
   });
 
+  const context = bookContext[book.id];
+  const bookFacts = context
+    ? [
+        `Реальный учебник: «${context.title}», ${context.authors}, ${book.publisher}, ${context.year}${context.isbn ? `, ISBN ${context.isbn}` : ""}${context.pages ? `, ${context.pages} стр.` : ""}.`,
+        ...context.structure.map((line) => `- ${line}`),
+        ...context.contents.map((line) => `- Содержание: ${line}`),
+      ]
+    : [];
+
   return [
     `Ты — методист и аналитик учебных программ. Дай полноценный разбор учебника «${book.title}» (${book.publisher}, ${book.year}) как кандидата на внедрение в школе.`,
     "",
-    "Разбор строится ТОЛЬКО на приведённых ниже результатах тестирования школьников по темам программы 5–11 классов. Ничего не выдумывай: все цифры в выводах бери из данных.",
+    "Разбор строится ТОЛЬКО на приведённых ниже данных: структуре реального издания и результатах тестирования школьников по темам программы 5–11 классов. Ничего не выдумывай: все цифры в выводах бери из данных.",
     "",
     "Критерии разбора:",
     ...analysisCriteria.map((criterion, index) => `${index + 1}. ${criterion}`),
     "",
+    ...(bookFacts.length > 0
+      ? ["Структура реального издания (прочитано из книги):", ...bookFacts, ""]
+      : ["Реальное издание недоступно, оценка только по статистике тестирования.", ""]),
     `Результаты тестирования по всем ${stats.length} темам программы (данные школ):`,
     ...content,
     "",

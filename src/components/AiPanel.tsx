@@ -3,6 +3,7 @@ import { buildAnalysisPrompt, type AiAnalysis } from "../lib/analytics";
 import { analyzeTextbook, getApiKey, setApiKey } from "../lib/llm";
 import { textbookById, textbooks, textbookStats } from "../data/textbooks";
 import { textbookReports } from "../data/reports";
+import { bookContext } from "../data/bookContext";
 
 function ScoreRing({ score }: { score: number }) {
   const radius = 34;
@@ -84,6 +85,12 @@ export function AiPanel() {
           </button>
         ))}
       </div>
+
+      <p className="ai-secure">
+        {bookContext[bookId]?.verified
+          ? `Разбор опирается на реальное издание: «${bookContext[bookId].title}», ${bookContext[bookId].authors}, ${textbookById(bookId).publisher}, ${bookContext[bookId].year}.`
+          : "Реальное издание недоступно — разбор только по статистике тестирования."}
+      </p>
 
       <div className="ai-run-row">
         <label className="ai-key">
