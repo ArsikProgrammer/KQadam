@@ -26,7 +26,7 @@ export const entBlocks: EntBlock[] = [
     id: "analysis",
     title: "Тригонометрия и анализ",
     share: 20,
-    topicIds: ["trig", "trig-eq", "derivative"],
+    topicIds: ["trig", "trig-eq", "derivative", "integral"],
     hint: "Блок с самым высоким порогом входа — и с самым высоким потолком баллов.",
   },
   {
@@ -54,4 +54,5 @@ export const entTrack: { topicId: string; milestone: string }[] = [
   { topicId: "power-fn", milestone: "9 класс: функции" },
   { topicId: "exp-log", milestone: "10 класс: показательные и логарифмы" },
   { topicId: "derivative", milestone: "11 класс: производная" },
+  { topicId: "integral", milestone: "11 класс: интегралы" },
 ];
